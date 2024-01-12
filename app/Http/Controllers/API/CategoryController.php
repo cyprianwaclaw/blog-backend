@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\User;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -33,10 +34,12 @@ class CategoryController extends Controller
         // Pobierz informacje o kategorii
         $category = Category::findOrFail($categoryId);
 
-        // Pobierz posty dla danej kategorii
-        $posts = $category->posts() ->orderBy('created_at', $order)
+        // Pobierz posty dla danej kategorii po relacji w modelu
+        $posts = $category->posts()->orderBy('created_at', $order)
             ->with(['categories', 'user'])
             ->paginate($perPage, ['*'], 'page', $page);
+
+        // $postsAuthor = $category->posts()->user_id;
 
         $postsData = $posts->map(function ($post) {
             return [
@@ -53,6 +56,7 @@ class CategoryController extends Controller
         return response()->json(
             [
                 'category' => $category->only(['name', 'link']),
+                // 'author' => $postsAuthor,
                 'posts' => [
                     'data' => $postsData,
                     'pagination' => [
@@ -65,5 +69,17 @@ class CategoryController extends Controller
             ],
             200
         );
+    }
+    public function getUsersInCategory($categoryId)
+    {
+        $category = Category::findOrFail($categoryId);
+
+        $usersInCategory = $category->posts()
+            ->with('user')
+            ->get()
+            ->pluck('user')
+            ->unique();
+
+        return response()->json(['usersInCategory' => $usersInCategory]);
     }
 }

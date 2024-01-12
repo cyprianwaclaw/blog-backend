@@ -25,8 +25,9 @@ Route::post('/auth/login', [AuthController::class, 'loginUser']);
 Route::get('/post/{id}', [PostController::class, 'show']);
 Route::get('/posts/user/{id}', [PostController::class, 'getUserPosts']);
 
-Route::get('/category/{id}/posts', [CategoryController::class, 'getCategoryWithPosts']);
 Route::get('/category/{id}', [CategoryController::class, 'getSingleCategory']);
+Route::get('/category/{id}/posts', [CategoryController::class, 'getCategoryWithPosts']);
+Route::get('/category/{id}/users', [CategoryController::class, 'getUsersInCategory']);
 
 // aby działało auth() musi byc w middlewarze
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
