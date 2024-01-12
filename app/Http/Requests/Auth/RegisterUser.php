@@ -4,6 +4,7 @@ namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class RegisterUser extends FormRequest
 {
@@ -62,6 +63,6 @@ class RegisterUser extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         $response = response()->json(['errors' => $validator->errors()], 422);
-        throw new \Illuminate\Validation\ValidationException($validator, $response);
+        throw new ValidationException($validator, $response);
     }
 }

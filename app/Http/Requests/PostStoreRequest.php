@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class PostStoreRequest extends FormRequest
 {
@@ -55,6 +56,6 @@ class PostStoreRequest extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         $response = response()->json(['errors' => $validator->errors()], 422);
-        throw new \Illuminate\Validation\ValidationException($validator, $response);
+        throw new ValidationException($validator, $response);
     }
 }

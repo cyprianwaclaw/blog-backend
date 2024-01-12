@@ -2,9 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,10 +19,14 @@ use App\Http\Controllers\API\UserController;
 */
 
 Route::post('/auth/register', [AuthController::class, 'registerUser']);
-
 Route::post('/auth/login', [AuthController::class, 'loginUser']);
-Route::post('/upload', [UserController::class, 'upload']);
+// Route::post('/upload', [UserController::class, 'upload']);
+
 Route::get('/post/{id}', [PostController::class, 'show']);
+Route::get('/posts/user/{id}', [PostController::class, 'getUserPosts']);
+
+Route::get('/category/{id}/posts', [CategoryController::class, 'getCategoryWithPosts']);
+Route::get('/category/{id}', [CategoryController::class, 'getSingleCategory']);
 
 // aby działało auth() musi byc w middlewarze
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
