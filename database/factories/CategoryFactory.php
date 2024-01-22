@@ -19,9 +19,11 @@ class CategoryFactory extends Factory
     {
 
         return [
-            'name' => $this->faker->word,
+             'name' => function () {
+                return Str::random(10);
+            },
             'link' => function () {
-                return Str::random(5). "-" . Str::random(5);
+                return Str::random(10). "-" . Str::random(10);
             },
             'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'updated_at' => $this->faker->dateTimeBetween('-1 year', 'now'),

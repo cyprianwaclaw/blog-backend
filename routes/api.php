@@ -1,12 +1,13 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\checkUserLogin;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CategoryController;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -20,17 +21,20 @@ use App\Http\Controllers\API\CategoryController;
 
 Route::post('/auth/register', [AuthController::class, 'registerUser']);
 Route::post('/auth/login', [AuthController::class, 'loginUser']);
-// Route::post('/upload', [UserController::class, 'upload']);
 
-Route::get('/post/{id}', [PostController::class, 'show']);
-Route::get('/posts/user/{id}', [PostController::class, 'getUserPosts']);
 
-Route::get('/category/{id}', [CategoryController::class, 'getSingleCategory']);
-Route::get('/category/{id}/posts', [CategoryController::class, 'getCategoryWithPosts']);
-Route::get('/category/{id}/users', [CategoryController::class, 'getUsersInCategory']);
-
-// aby działało auth() musi byc w middlewarze
-Route::middleware(['auth:sanctum', 'verified'])->group(function () {
-    Route::post('/posts', [PostController::class, 'store']);
-
+//!aby działało auth() lub $request->user() musi byc w middlewarze
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('logged')->group(function () {
+        Route::get('/data/home', [PostController::class, 'getPostsListHomeLogged']);
+        Route::get('/data/category/{link}', [CategoryController::class, 'getPostsListCategoryLogged']);
+        Route::post('/create/post', [PostController::class, 'store']);
+        Route::get('/user', [UserController::class, 'getAuthenticatedUser']);
+    });
 });
+//!aby działało auth() lub $request->user() musi byc w middlewarze
+
+Route::get('/data/home', [PostController::class, 'getPostsListHome']);
+Route::get('/data/category/{link}', [CategoryController::class, 'getPostsListCategory']);
+Route::get('/data/user/{link}', [PostController::class, 'getPostsListUser']);
+Route::get('/post/{link}', [PostController::class, 'getPostByLink']);

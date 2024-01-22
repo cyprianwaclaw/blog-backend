@@ -53,5 +53,12 @@ class LoginUser extends FormRequest
         $response = response()->json(['errors' => $validator->errors()], 422);
         throw new ValidationException($validator, $response);
     }
-}
+    // protected function failedValidation(Validator $validator)
+    // {
 
+    //     $errors = $validator->errors()->all();
+    //     $response = response()->json(['errors' => ['message' => $errors]], 422);
+
+    //     throw new ValidationException($validator, $response);
+    // }
+}

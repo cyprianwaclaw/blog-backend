@@ -22,7 +22,6 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-
             'password' => Hash::make($request->password),
         ]);
 
@@ -45,8 +44,13 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
-                'status' => false,
-                'message' => 'Nie ma takiego użytkownika o podanym adresie e-mail i haśle.',
+                'errors' =>[
+                    'notExist' => ['Podany użytkownik nie istnieje'],
+
+                ]
+
+
+                // 'status' => false,
             ], 401);
         }
 

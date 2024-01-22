@@ -20,10 +20,12 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'link',
+        'image',
         'password',
     ];
 
-    /**
+    /**1
      * The attributes that should be hidden for serialization.
      *
      * @var array<int, string>
@@ -43,8 +45,14 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    public function savedPosts()
+    {
+        return $this->hasMany(SavedPost::class);
+    }
+
     public function posts()
     {
         return $this->hasMany(Post::class);
     }
+
 }

@@ -8,7 +8,8 @@ use App\Models\PostDetails;
 use App\Models\User;
 use App\Models\Category;
 use App\Models\CategoriesPost;
-
+use App\Models\Comment;
+use App\Models\SavedPost;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,11 +18,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->count(3)->create();
-        Category::factory()->count(10)->create();
-        Post::factory()->count(14)->create();
-        PostDetails::factory()->count(24)->create();
-        CategoriesPost::factory()->count(50)->create();
+        User::factory()->count(10)->create();
+        Category::factory()->count(40)->create();
+        Post::factory()->count(50)->create();
+        PostDetails::factory()->count(70)->create();
+        CategoriesPost::factory()->count(250)->create();
+        Comment::factory()->count(300)->create();
+        SavedPost::factory()->count(300)->create();
+
 
 
 
