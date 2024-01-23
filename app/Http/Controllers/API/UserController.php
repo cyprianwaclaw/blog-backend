@@ -13,13 +13,9 @@ class UserController extends Controller
 
     public function getAuthenticatedUser()
     {
-        $user = Auth::user();
+        $user = auth()->user();
+            return response()->json(['user' => $user], 200);
 
-        if ($user) {
-            return response()->json(['data' => $user], 200);
-        } else {
-            return response()->json(['data' => null], 200);
-        }
     }
 
     public function getAuthenticatedUser1()

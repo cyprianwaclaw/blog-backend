@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Post;
 use App\Models\User;
 use App\Models\Category;
+use App\Models\SavedPost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
@@ -36,6 +37,40 @@ class CategoryController extends Controller
         }
     }
 
+    private function mapPostData($post, $currentDateTime, $savedPosts)
+    {
+        $publishedAt = Carbon::parse($post->created_at);
+        $dateDifference = $publishedAt->diffInDays($currentDateTime);
+        $savedPost = $savedPosts->where('post_id', $post->id)->first();
+
+        return [
+            'savedPost' => $savedPost,
+            'title' => $post->name,
+            'link' => $post->link,
+            'description' => $post->description,
+            'image' => $post->{'hero-image'},
+            'saved' => $savedPost ? true : false,
+            'user' => $post->user->only(['name', 'link', 'image']),
+            'categories' => $post->categories->map(function ($category) {
+                return $category->only(['name', 'link']);
+            }),
+            'comments' => $post->comments->count(),
+            'date' => $this->formatDate($publishedAt, $dateDifference),
+        ];
+    }
+
+    private function getSavedPosts()
+    {
+        $currentUser = auth()->user();
+        return SavedPost::where('user_id', $currentUser->id)->select('user_id', 'post_id')->get();
+    }
+
+    private function mapPosts($posts, $currentDateTime, $savedPosts)
+    {
+        return $posts->map(function ($post) use ($currentDateTime, $savedPosts) {
+            return $this->mapPostData($post, $currentDateTime, $savedPosts);
+        });
+    }
 
     public function getPostsListCategory(Request $request, $link)
     {
@@ -44,11 +79,8 @@ class CategoryController extends Controller
         $page = $request->input('page', 1);
         $titleParam = $request->input('title');
         $order = $request->input('order', 'asc');
+        $savedPosts = collect();
 
-        // Dodaj warunek sprawdzający wartość 'title' i ustaw per_page na 2
-        // if ($titleParam === 'latest') {
-        //     $perPage = 2;
-        // }
         if ($titleParam === 'popular') {
             $perPage = 2;
         }
@@ -71,23 +103,7 @@ class CategoryController extends Controller
             ];
         })->values();
 
-        $currentPostsData = $paginatedPosts->map(function ($post) use ($currentDateTime) {
-            $publishedAt = Carbon::parse($post->created_at);
-            $dateDifference = $publishedAt->diffInDays($currentDateTime);
-            return [
-                'title' => $post->name,
-                'link' => $post->link,
-                'description' => $post->description,
-                'image' => $post->{'hero-image'},
-                'user' => $post->user->only(['name', 'link', 'image']),
-                'saved' => false,
-                'categories' => $post->categories->map(function ($category) {
-                    return $category->only(['name', 'link']);
-                }),
-                'comments' => $post->comments->count(),
-                'date' => $this->formatDate($publishedAt, $dateDifference),
-            ];
-        });
+        $currentPostsData = $this->mapPosts($paginatedPosts, $currentDateTime, $savedPosts);
 
         $uniqueCategoriesData = $paginatedPosts->flatMap(function ($post) {
             return $post->categories->map(function ($category) {
@@ -100,6 +116,7 @@ class CategoryController extends Controller
         $uniqueCategoriesData = $uniqueCategoriesData->unique();
 
         return response()->json([
+            "test",
             "category" => [
                 "name" => $category->name,
                 "link" => $category->link,
@@ -123,11 +140,8 @@ class CategoryController extends Controller
         $page = $request->input('page', 1);
         $titleParam = $request->input('title');
         $order = $request->input('order', 'asc');
+        $savedPosts = $this->getSavedPosts();
 
-        // Dodaj warunek sprawdzający wartość 'title' i ustaw per_page na 2
-        // if ($titleParam === 'latest') {
-        //     $perPage = 2;
-        // }
         if ($titleParam === 'popular') {
             $perPage = 2;
         }
@@ -150,23 +164,7 @@ class CategoryController extends Controller
             ];
         })->values();
 
-        $currentPostsData = $paginatedPosts->map(function ($post) use ($currentDateTime) {
-            $publishedAt = Carbon::parse($post->created_at);
-            $dateDifference = $publishedAt->diffInDays($currentDateTime);
-            return [
-                'title' => $post->name,
-                'link' => $post->link,
-                'description' => $post->description,
-                'image' => $post->{'hero-image'},
-                'user' => $post->user->only(['name', 'link', 'image']),
-                'saved' => false,
-                'categories' => $post->categories->map(function ($category) {
-                    return $category->only(['name', 'link']);
-                }),
-                'comments' => $post->comments->count(),
-                'date' => $this->formatDate($publishedAt, $dateDifference),
-            ];
-        });
+        $currentPostsData = $this->mapPosts($paginatedPosts, $currentDateTime, $savedPosts);
 
         $uniqueCategoriesData = $paginatedPosts->flatMap(function ($post) {
             return $post->categories->map(function ($category) {
@@ -179,6 +177,7 @@ class CategoryController extends Controller
         $uniqueCategoriesData = $uniqueCategoriesData->unique();
 
         return response()->json([
+            "test",
             "category" => [
                 "name" => $category->name,
                 "link" => $category->link,
@@ -195,4 +194,3 @@ class CategoryController extends Controller
         ]);
     }
 }
-

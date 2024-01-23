@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\checkUserLogin;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PostController;
+use App\Http\Controllers\API\TestController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CategoryController;
 /*
@@ -30,7 +31,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/data/category/{link}', [CategoryController::class, 'getPostsListCategoryLogged']);
         Route::get('/data/user/{link}', [PostController::class, 'getPostsListUserLogged']);
         Route::get('/post/{link}', [PostController::class, 'getPostByLinkLogged']);
-        Route::post('/create/post', [PostController::class, 'store']);
+        // Route::post('/create/post', [PostController::class, 'store']);
         Route::get('/user', [UserController::class, 'getAuthenticatedUser']);
     });
 });
