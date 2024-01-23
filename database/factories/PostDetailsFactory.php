@@ -17,14 +17,16 @@ class PostDetailsFactory extends Factory
      */
     public function definition(): array
     {
+        $classNames = ['title', 'list', 'paragraph', 'class4', 'class5'];
         return [
             'post_id' => function () {
                 // Pobierz ID losowego postu
                 return Post::inRandomOrder()->first()->id;
             },
-            'class_name' => $this->faker->boolean ? 'test' : 'test1',
-            'image' => $this->faker->imageUrl(), // Możesz dostosować generowanie losowego URL obrazu
-            'text' => $this->faker->paragraph,
+            // 'index' => $this->faker->randomElement($classNames),
+            'class_name' => $this->faker->randomElement($classNames),
+            'image' =>  $this->faker->boolean ? null : $this->faker->imageUrl(),
+            'text' => $this->faker->boolean ? null : $this->faker->text,
             'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'updated_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
         ];

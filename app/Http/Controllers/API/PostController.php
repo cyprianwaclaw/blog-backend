@@ -6,6 +6,7 @@ namespace App\Http\Controllers\API;
 use App\Models\Post;
 use App\Models\User;
 use App\Models\Category;
+use App\Models\SavedPost;
 use App\Models\PostDetails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -127,15 +128,22 @@ class PostController extends Controller
 
         $categories = Category::take(5)->select('name', 'link')->get();
 
-        $postsListrecommendedMap = $postsListrecommended->map(function ($post) use ($currentDateTime) {
+        $currentUser =  User::findOrFail(auth()->user()->id);
+        $savedPosts = SavedPost::where('user_id', '=', $currentUser->id)->select('user_id', 'post_id')->get();
+
+        $postsListrecommendedMap = $postsListrecommended->map(function ($post) use ($currentDateTime, $currentUser) {
             $publishedAt = Carbon::parse($post->created_at);
             $dateDifference = $publishedAt->diffInDays($currentDateTime);
+            $savedPost = SavedPost::where('user_id', '=', $currentUser->id)
+            ->where('post_id','=', $post->id)
+            ->first();
             return [
+                $savedPost,
                 'title' => $post->name,
                 'link' => $post->link,
                 'description' => $post->description,
                 'image' => $post->{'hero-image'},
-                'saved' => false,
+                'saved' => $savedPost ? true : false,
                 'user' => $post->user->only(['name', 'link', 'image']),
                 'categories' => $post->categories->map(function ($category) {
                     return $category->only(['name', 'link']);
@@ -162,6 +170,8 @@ class PostController extends Controller
 
         return response()->json(
             [
+                $savedPosts,
+                'user' => $currentUser,
                 'hero' => $postsListHeroMap,
                 'authors' => $authors,
                 'categories' => $categories,
@@ -175,82 +185,6 @@ class PostController extends Controller
     public function getPostsListUser(Request $request, $link)
     {
 
-        //     $currentDateTime = now();
-        //     $perPage = $request->input('per_page', 3);
-        //     $page = $request->input('page', 1);
-        //     $titleParam = $request->input('title');
-        //     $order = $request->input('order', 'asc');
-
-        //     // Dodaj warunek sprawdzający wartość 'title' i ustaw per_page na 2
-        //     // if ($titleParam === 'latest') {
-        //     //     $perPage = 2;
-        //     // }
-        //     if ($titleParam === 'popular') {
-        //         $perPage = 2;
-        //     }
-        //     if ($titleParam === 'null' || $titleParam === null) {
-        //         $order = 'desc';
-        //     }
-
-        //     $category = Category::where('link', $link)->first();
-        //     $posts = $category->posts()->with('comments', 'user', 'categories');
-        //     $posts->orderBy('created_at', $order);
-
-        //     $paginatedPosts = $posts->paginate($perPage, ['*'], 'page', $page);
-        //     $usersInCategory = $category->posts()->take(5)->with('user')->get()->pluck('user')->unique();
-        //     $userData = $usersInCategory->map(function ($user) {
-        //         return [
-        //             'id' => $user->id,
-        //             'name' => $user->name,
-        //             'image' => $user->image,
-        //             'link' => $user->link,
-        //         ];
-        //     })->values();
-
-        //     $currentPostsData = $paginatedPosts->map(function ($post) use ($currentDateTime) {
-        //         $publishedAt = Carbon::parse($post->created_at);
-        //         $dateDifference = $publishedAt->diffInDays($currentDateTime);
-        //         return [
-        //             'title' => $post->name,
-        //             'link' => $post->link,
-        //             'description' => $post->description,
-        //             'image' => $post->{'hero-image'},
-        //             'user' => $post->user->only(['name', 'link', 'image']),
-        //             'saved' => false,
-        //             'categories' => $post->categories->map(function ($category) {
-        //                 return $category->only(['name', 'link']);
-        //             }),
-        //             'comments' => $post->comments->count(),
-        //             'date' => $this->formatDate($publishedAt, $dateDifference),
-        //         ];
-        //     });
-
-        //     $uniqueCategoriesData = $paginatedPosts->flatMap(function ($post) {
-        //         return $post->categories->map(function ($category) {
-        //             return [
-        //                 'name' => $category->name,
-        //                 'link' => $category->link,
-        //             ];
-        //         });
-        //     })->unique()->take(5)->values();
-        //     $uniqueCategoriesData = $uniqueCategoriesData->unique();
-
-        //     return response()->json([
-        //         "category" => [
-        //             "name" => $category->name,
-        //             "link" => $category->link,
-        //             "postsCount" => $paginatedPosts->total(), // użyj total() dla całkowitej liczby postów
-        //         ],
-        //         "usersInCategory" => $userData,
-        //         "uniqueCategories" => $uniqueCategoriesData,
-        //         "posts" => $currentPostsData,
-        //         'pagination' => [
-        //             'per_page' => $paginatedPosts->perPage(),
-        //             'current_page' => $paginatedPosts->currentPage(),
-        //             'last_page' => $paginatedPosts->lastPage(),
-        //         ],
-        //     ]);
-        // }
         $currentDateTime = now();
         $perPage = $request->input('per_page', 3);
         $page = $request->input('page', 1);
@@ -289,7 +223,6 @@ class PostController extends Controller
                 $dateDifference = $publishedAt->diffInDays($currentDateTime);
                 return [
                     'title' => $post->name,
-                    'user_id' => $post->user_id,
                     'link' => $post->link,
                     'description' => $post->description,
                     'image' => $post->{'hero-image'},
@@ -306,7 +239,6 @@ class PostController extends Controller
             return response()->json(
                 [
                     "user" => [
-                        "link" => $user->link,
                         "name" => $user->name,
                         "image" => $user->image,
                         "postsCount" => $userPosts->total(), // użyj total() dla całkowitej liczby postów
@@ -330,25 +262,205 @@ class PostController extends Controller
         }
     }
 
+    public function getPostsListUserLogged(Request $request, $link)
+    {
+
+        $currentDateTime = now();
+        $perPage = $request->input('per_page', 3);
+        $page = $request->input('page', 1);
+        $titleParam = $request->input('title');
+        $order = $request->input('order', 'asc');
+
+        if ($titleParam === 'popular') {
+            $perPage = 2;
+        }
+        if ($titleParam === 'null' || $titleParam === null) {
+            $order = 'desc';
+        }
+
+        $user = User::where('link', '=', $link)->first();
+
+        $query = Post::where('user_id', '=', $user->id)->with(['postDetails', 'categories', 'user']);
+
+
+        $userPosts = $query->paginate($perPage, ['*'], 'page', $page);
+
+        if ($userPosts) {
+
+            $uniqueCategoriesData = $userPosts->flatMap(function ($post) {
+                return $post->categories->map(function ($category) {
+                    return [
+                        'name' => $category->name,
+                        'link' => $category->link,
+                    ];
+                });
+            })->unique()->take(5)->values();
+            $uniqueCategoriesData = $uniqueCategoriesData->unique();
+
+
+            $currentPostsData = $userPosts->map(function ($post) use ($currentDateTime) {
+                $publishedAt = Carbon::parse($post->created_at);
+                $dateDifference = $publishedAt->diffInDays($currentDateTime);
+                return [
+                    'title' => $post->name,
+                    'link' => $post->link,
+                    'description' => $post->description,
+                    'image' => $post->{'hero-image'},
+                    'user' => $post->user->only(['name', 'link', 'image']),
+                    'saved' => false,
+                    'categories' => $post->categories->map(function ($category) {
+                        return $category->only(['name', 'link']);
+                    }),
+                    'comments' => $post->comments->count(),
+                    'date' => $this->formatDate($publishedAt, $dateDifference),
+                ];
+            });
+
+            return response()->json(
+                [
+                    "user" => [
+                        "name" => $user->name,
+                        "image" => $user->image,
+                        "postsCount" => $userPosts->total(), // użyj total() dla całkowitej liczby postów
+                    ],
+                    'posts' => $currentPostsData,
+                    "uniqueCategories" => $uniqueCategoriesData,
+                    'pagination' => [
+                        // 'total' => $userPosts->total(),
+                        'per_page' => $userPosts->perPage(),
+                        'current_page' => $userPosts->currentPage(),
+                        'last_page' => $userPosts->lastPage(),
+                    ],
+
+                ],
+                200
+            );
+        } else {
+            return response()->json([
+                'message' => 'Post not found.',
+            ], 404);
+        }
+    }
 
     public function getPostByLink($link)
     {
+        $currentDateTime = now();
         $currentPost = Post::with(['postDetails', 'categories', 'user', 'comments'])->where('link', '=', $link)->first();
 
         if ($currentPost) {
             $comments = $currentPost->comments()->with('user')->get();
+            $publishedAt = Carbon::parse($currentPost->created_at);
+            $dateDifference = $publishedAt->diffInDays($currentDateTime);
+
+
+            $userPosts = Post::where('user_id', '=', $currentPost->user->id)
+                ->where('id', '!=', $currentPost->id)
+                ->take(6)->get();
+
+
+
+            $otherUserPostsMapping = $userPosts->map(function ($post) use ($currentDateTime) {
+                $publishedAt = Carbon::parse($post->created_at);
+                $dateDifference = $publishedAt->diffInDays($currentDateTime);
+                return [
+                    'title' => $post->name,
+                    'link' => $post->link,
+                    'description' => $post->description,
+                    'image' => $post->{'hero-image'},
+                    'user' => $post->user->only(['name', 'link', 'image']),
+                    'saved' => false,
+                    'categories' => $post->categories->map(function ($category) {
+                        return $category->only(['name', 'link']);
+                    }),
+                    'comments' => $post->comments->count(),
+                    'date' => $this->formatDate($publishedAt, $dateDifference),
+                ];
+            });
 
             return response()->json(
                 [
+                    'otherUserPosts' => $otherUserPostsMapping,
                     'title' => $currentPost->name,
-                    'link' => $currentPost->link,
+                    'date' => $this->formatDate($publishedAt, $dateDifference),
+                    'saved' => false,
+                    'commentsCount' => $currentPost->comments->count(),
                     'description' => $currentPost->description,
                     'image' => $currentPost->{'hero-image'},
-                    'user' => $currentPost->user->only(['name', 'link']),
+                    'user' => $currentPost->user->only(['name', 'link', 'image']),
                     'postDetails' => $currentPost->postDetails->map(function ($detail) {
                         return $detail->only(['text', 'class_name', 'image']);
                     }),
-                    'categories' => $currentPost->categories->map(function ($category) {
+                    'categories' => $currentPost->categories->take(4)->map(function ($category) {
+                        return $category->only(['name', 'link']);
+                    }),
+                    'comments' => $comments->map(function ($comment) {
+                        return [
+                            'title' => $comment->title,
+                            'relaction' => $comment->relaction,
+                            'text' => $comment->text,
+                            'user' => $comment->user->only(['name', 'link', 'image']),
+                            'created_at' => $comment->created_at,
+                        ];
+                    }),
+                ],
+                200
+            );
+        } else {
+            return response()->json([
+                'message' => 'Post nie istnieje',
+            ], 404);
+        }
+    }
+
+    public function getPostByLinkLogged($link)
+    {
+        $currentDateTime = now();
+        $currentPost = Post::with(['postDetails', 'categories', 'user', 'comments'])->where('link', '=', $link)->first();
+
+        if ($currentPost) {
+            $comments = $currentPost->comments()->with('user')->get();
+            $publishedAt = Carbon::parse($currentPost->created_at);
+            $dateDifference = $publishedAt->diffInDays($currentDateTime);
+
+
+            $userPosts = Post::where('user_id', '=', $currentPost->user->id)
+                ->where('id', '!=', $currentPost->id)
+                ->take(6)->get();
+
+
+
+            $otherUserPostsMapping = $userPosts->map(function ($post) use ($currentDateTime) {
+                $publishedAt = Carbon::parse($post->created_at);
+                $dateDifference = $publishedAt->diffInDays($currentDateTime);
+                return [
+                    'title' => $post->name,
+                    'link' => $post->link,
+                    'description' => $post->description,
+                    'image' => $post->{'hero-image'},
+                    'user' => $post->user->only(['name', 'link', 'image']),
+                    'saved' => false,
+                    'categories' => $post->categories->map(function ($category) {
+                        return $category->only(['name', 'link']);
+                    }),
+                    'comments' => $post->comments->count(),
+                    'date' => $this->formatDate($publishedAt, $dateDifference),
+                ];
+            });
+
+            return response()->json(
+                [
+                    'otherUserPosts' => $otherUserPostsMapping,
+                    'title' => $currentPost->name,
+                    'date' => $this->formatDate($publishedAt, $dateDifference),
+                    'saved' => false,
+                    'commentsCount' => $currentPost->comments->count(),
+                    'description' => $currentPost->description,
+                    'image' => $currentPost->{'hero-image'},
+                    'user' => $currentPost->user->only(['name', 'link', 'image']),
+                    'postDetails' => $currentPost->postDetails->map(function ($detail) {
+                        return $detail->only(['text', 'class_name', 'image']);
+                    }),
+                    'categories' => $currentPost->categories->take(4)->map(function ($category) {
                         return $category->only(['name', 'link']);
                     }),
                     'comments' => $comments->map(function ($comment) {

@@ -28,11 +28,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('logged')->group(function () {
         Route::get('/data/home', [PostController::class, 'getPostsListHomeLogged']);
         Route::get('/data/category/{link}', [CategoryController::class, 'getPostsListCategoryLogged']);
+        Route::get('/data/user/{link}', [PostController::class, 'getPostsListUserLogged']);
+        Route::get('/post/{link}', [PostController::class, 'getPostByLinkLogged']);
         Route::post('/create/post', [PostController::class, 'store']);
         Route::get('/user', [UserController::class, 'getAuthenticatedUser']);
     });
 });
-//!aby działało auth() lub $request->user() musi byc w middlewarze
 
 Route::get('/data/home', [PostController::class, 'getPostsListHome']);
 Route::get('/data/category/{link}', [CategoryController::class, 'getPostsListCategory']);

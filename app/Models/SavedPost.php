@@ -12,4 +12,15 @@ class SavedPost extends Model
         'user_id',
         'post_id',
     ];
+    // Relacja do użytkownika
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // Relacja do postu
+    public function post()
+    {
+        return $this->belongsTo(Post::class);
+    }
 }
