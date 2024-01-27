@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\PostStoreRequest;
+use App\Http\Requests\SavedPostRequest;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\CreatePostRequest;
 
 class PostController extends Controller
 {
@@ -293,7 +295,6 @@ class PostController extends Controller
         $otherUserPostsMapping = $this->mapPosts($userPosts, $currentDateTime, $savedPosts);
 
         return response()->json([
-            'otherUserPosts' => $otherUserPostsMapping,
             'title' => $currentPost->name,
             'date' => $this->formatDate($publishedAt, $dateDifference),
             'saved' => false,
@@ -316,6 +317,7 @@ class PostController extends Controller
                     'created_at' => $comment->created_at,
                 ];
             }),
+            'otherUserPosts' => $otherUserPostsMapping,
         ], 200);
     }
 
@@ -347,8 +349,6 @@ class PostController extends Controller
             ->first(['user_id', 'post_id']);
 
         return response()->json([
-            $saveCurrent,
-            'otherUserPosts' => $otherUserPostsMapping,
             'title' => $currentPost->name,
             'date' => $this->formatDate($publishedAt, $dateDifference),
             'saved' => $saveCurrent ? true : false,
@@ -371,26 +371,59 @@ class PostController extends Controller
                     'created_at' => $comment->created_at,
                 ];
             }),
+            'otherUserPosts' => $otherUserPostsMapping,
         ], 200);
     }
 
-    // TODO:uzepełnic
-    // public function store(PostStoreRequest $request)
-    // {
-    //     $name = $request->file('image')->hashName();
-    //     $path = Storage::putFileAs('photos', $request->file('image'), $name);
-    //     $currentUserId = auth()->user()->id;
-    //     $formData = $request->validated();
-    //     $formData['image'] = asset("storage/$path");
-    //     $formData['user_id'] = $currentUserId;
-    //     $createdPost = Post::create($formData);
-    //     $createdPost->categories()->attach($request->input('category_ids'));
-    //     // przy tworzeniu nowych, gdy chcmy pobrac relacje trzeba ja "zaladowac"
-    //     // Log::info("Path to saved image: $path");
-    //     $withUser = $createdPost->load(['user']);
-    //     return response()->json([
-    //         'message' => 'Post successfully created.',
-    //         'created_post' =>  $withUser,
-    //     ], 200);
-    // }
+    public function postSaved(SavedPostRequest $request)
+    {
+        $user = $request->get('user_id');
+        $post = $request->get('post_id');
+
+        // $request->validated();
+        $formData = $request->all();
+        $findRecord = SavedPost::where('post_id', $post)->where('user_id', $user)->first();
+
+        if (!$findRecord) {
+            SavedPost::create(
+                $formData
+            );
+            return response()->json(['message' => 'Zapisano post'], 200);
+        } else {
+            return response()->json(['message' => 'Post jest już zapisany'], 422);
+        }
+    }
+
+    public function postUnSaved(SavedPostRequest $request)
+    {
+        $user = $request->get('user_id');
+        $post = $request->get('post_id');
+
+        $findRecord = SavedPost::where('post_id', $post)->where('user_id', $user)->first();
+
+        if ($findRecord) {
+            SavedPost::where('post_id', $post)->where('user_id', $user)->delete();
+            return response()->json(['message' => 'Usunięto zapisane posty'], 200);
+        } else {
+            return response()->json(['message' => 'Nie znaleziono zapisu dla danego posta'], 422);
+        }
+    }
+
+    public function createPost(CreatePostRequest $request)
+    {
+        $categoryIds = json_decode($request->get('category_ids'), true); // Pobieranie ID kategorii z formularza oraz rzekształcamy string "[1,2,3]" na tablicę [1, 2, 3]
+
+        $formData = $request->all();
+        $imageName = $request->file('hero-image')->hashName();
+        $path = Storage::putFileAs('photos-hero', $request->file('hero-image'), $imageName);
+
+        $formData['hero-image'] = asset("storage/$path");
+        $createdPost = Post::create($formData);
+
+        foreach ($categoryIds as $categoryId) {
+            $createdPost->categories()->attach($categoryId);
+        }
+
+        return response()->json(['message' => 'Post successfully created'], 200);
+    }
 }
