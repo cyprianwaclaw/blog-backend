@@ -25,6 +25,7 @@ class PostFactory extends Factory
             'link' => function () {
                 return Str::random(10) . "-" . Str::random(10);
             },
+            'status'=> $this->faker->boolean ? 'published' : 'draft',
             'name' => $this->faker->sentence,
             'hero-image' => $this->faker->imageUrl(), // Możesz dostosować generowanie losowego URL obrazu
             'description' => $this->faker->paragraph,

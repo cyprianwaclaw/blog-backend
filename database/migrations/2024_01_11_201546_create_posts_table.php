@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             // $table->foreignId('post_detail_id')->constrained('post_details')->onDelete('cascade');
             $table->string('name');
+            $table->enum('status', ['published', 'draft']);
             $table->string('hero-image');
             $table->string('link')->unique();
             $table->text('description');

@@ -53,6 +53,7 @@ class PostController extends Controller
         $savedPost = $savedPosts->where('post_id', $post->id)->first();
 
         return [
+            'id' => $post->id,
             'savedPost' => $savedPost,
             'title' => $post->name,
             'link' => $post->link,
@@ -70,6 +71,7 @@ class PostController extends Controller
     private function getPostsForHero()
     {
         return Post::with(['user', 'comments'])
+        ->where('status', '=', 'published')
             ->orderBy('created_at', 'asc')
             ->take(3)
             ->get();
@@ -78,6 +80,7 @@ class PostController extends Controller
     private function getRecommendedPosts()
     {
         return Post::with(['categories', 'user', 'comments'])
+        ->where('status', '=', 'published')
             ->orderBy('created_at', 'asc')
             ->take(10)
             ->get();
@@ -86,6 +89,7 @@ class PostController extends Controller
     private function getAuthors()
     {
         return User::take(5)->select('name', 'link', 'image')->get()
+            ->where('status', '=', 'published')
             ->map(function ($author) {
                 $author['follow'] = false;
                 return $author;
@@ -174,7 +178,7 @@ class PostController extends Controller
 
         $user = User::where('link', '=', $link)->first();
 
-        $query = Post::where('user_id', '=', $user->id)->with(['postDetails', 'categories', 'user']);
+        $query = Post::where('user_id', '=', $user->id)->where('status', '=', 'published')->with(['postDetails', 'categories', 'user']);
         $userPosts = $query->paginate($perPage, ['*'], 'page', $page);
 
         if ($userPosts) {
@@ -232,7 +236,7 @@ class PostController extends Controller
 
         $user = User::where('link', '=', $link)->first();
 
-        $query = Post::where('user_id', '=', $user->id)->with(['postDetails', 'categories', 'user']);
+        $query = Post::where('user_id', '=', $user->id)->where('status', '=', 'published')->with(['postDetails', 'categories', 'user']);
         $userPosts = $query->paginate($perPage, ['*'], 'page', $page);
 
         if ($userPosts) {
@@ -290,11 +294,13 @@ class PostController extends Controller
 
         $userPosts = Post::where('user_id', '=', $currentPost->user->id)
             ->where('id', '!=', $currentPost->id)
+            ->where('status', '=', 'published')
             ->take(6)->get();
 
         $otherUserPostsMapping = $this->mapPosts($userPosts, $currentDateTime, $savedPosts);
 
         return response()->json([
+            'id' => $currentPost->id,
             'title' => $currentPost->name,
             'date' => $this->formatDate($publishedAt, $dateDifference),
             'saved' => false,
@@ -339,6 +345,7 @@ class PostController extends Controller
 
         $userPosts = Post::where('user_id', '=', $currentPost->user->id)
             ->where('id', '!=', $currentPost->id)
+            ->where('status', '=', 'published')
             ->take(6)->get();
 
         $otherUserPostsMapping = $this->mapPosts($userPosts, $currentDateTime, $savedPosts);
@@ -349,6 +356,7 @@ class PostController extends Controller
             ->first(['user_id', 'post_id']);
 
         return response()->json([
+            'id' => $currentPost->id,
             'title' => $currentPost->name,
             'date' => $this->formatDate($publishedAt, $dateDifference),
             'saved' => $saveCurrent ? true : false,
@@ -375,6 +383,7 @@ class PostController extends Controller
         ], 200);
     }
 
+
     public function postSaved(SavedPostRequest $request)
     {
         $user = $request->get('user_id');
@@ -396,16 +405,18 @@ class PostController extends Controller
 
     public function postUnSaved(SavedPostRequest $request)
     {
-        $user = $request->get('user_id');
-        $post = $request->get('post_id');
+
+        $formData = $request->all();
+        $user = $formData['user_id'];
+        $post = $formData['post_id'];
 
         $findRecord = SavedPost::where('post_id', $post)->where('user_id', $user)->first();
 
         if ($findRecord) {
             SavedPost::where('post_id', $post)->where('user_id', $user)->delete();
-            return response()->json(['message' => 'Usunięto zapisane posty'], 200);
+            return response()->json(['message' => 'Usunięto zapisany post'], 200);
         } else {
-            return response()->json(['message' => 'Nie znaleziono zapisu dla danego posta'], 422);
+            return response()->json(['message' => 'Nie znaleziono zapisu dla danego postu'], 422);
         }
     }
 

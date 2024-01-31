@@ -20,11 +20,11 @@ class DatabaseSeeder extends Seeder
     {
         User::factory()->count(10)->create();
         Category::factory()->count(40)->create();
-        Post::factory()->count(50)->create();
-        PostDetails::factory()->count(370)->create();
-        CategoriesPost::factory()->count(250)->create();
+        Post::factory()->count(100)->create();
+        PostDetails::factory()->count(400)->create();
+        CategoriesPost::factory()->count(2500)->create();
         Comment::factory()->count(300)->create();
-        SavedPost::factory()->count(300)->create();
+        SavedPost::factory()->count(400)->create();
 
 
 

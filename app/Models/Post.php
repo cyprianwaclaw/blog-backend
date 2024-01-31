@@ -33,9 +33,5 @@ class Post extends Model
         return $this->belongsToMany(Category::class, 'categories_posts', 'post_id', 'category_id')
         ->select('id', 'name', 'link');
     }
-    // public function categories()
-    // {
-    //     return $this->hasMany(Category::class);
-    //     // return $this->belongsToMany(PostDetails::class,'post_details', 'post_id');
-    // }
+
 }

@@ -30,14 +30,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/data/home', [PostController::class, 'getPostsListHomeLogged']);
         Route::get('/data/category/{link}', [CategoryController::class, 'getPostsListCategoryLogged']);
         Route::get('/data/user/{link}', [PostController::class, 'getPostsListUserLogged']);
+
+        Route::get('/user/saved-posts', [UserController::class, 'getSavedPosts']);
+        Route::get('/user/posts', [UserController::class, 'getPostsUserLogged']);
+        
         Route::get('/post/{link}', [PostController::class, 'getPostByLinkLogged']);
         Route::post('/save', [PostController::class, 'postSaved']);
         Route::post('/unsave', [PostController::class, 'postUnSaved']);
         Route::post('/create/post', [PostController::class, 'createPost']);
-        // Route::post('/test', [PostController::class, 'test']);
 
-        // }}/logged/posts/user
-        // /logged/save/10
+
         Route::get('/user', [UserController::class, 'getAuthenticatedUser']);
     });
 });
