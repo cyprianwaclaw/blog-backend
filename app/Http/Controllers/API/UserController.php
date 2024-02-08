@@ -49,7 +49,11 @@ class UserController extends Controller
         ];
     }
 
-
+public function getAuthenticatedUser(){
+    return response()->json([
+        'user'=>auth()->user()
+    ]);
+}
     public function getSavedPosts(Request $request)
     {
         // $perPage = $request->input('per_page', 3);

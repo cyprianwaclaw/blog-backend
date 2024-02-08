@@ -54,7 +54,6 @@ class PostController extends Controller
 
         return [
             'id' => $post->id,
-            'savedPost' => $savedPost,
             'title' => $post->name,
             'link' => $post->link,
             'description' => $post->description,
@@ -71,22 +70,23 @@ class PostController extends Controller
     private function getPostsForHero()
     {
         return Post::with(['user', 'comments'])
-        ->where('status', '=', 'published')
+            ->where('status', '=', 'published')
             ->orderBy('created_at', 'asc')
-            ->take(3)
+            ->take(10)
             ->get();
     }
 
     private function getRecommendedPosts()
     {
         return Post::with(['categories', 'user', 'comments'])
-        ->where('status', '=', 'published')
+            ->where('status', '=', 'published')
             ->orderBy('created_at', 'asc')
+            // ->take(3)
             ->take(10)
             ->get();
     }
 
-    private function getAuthors()
+    private function getAuthors()      
     {
         return User::take(5)->select('name', 'link', 'image')->get()
             ->where('status', '=', 'published')
@@ -383,6 +383,75 @@ class PostController extends Controller
         ], 200);
     }
 
+    public function getUserProfilePage(Request $request)
+    {
+        $currentDateTime = now();
+        $perPage = $request->input('per_page', 3);
+        $page = $request->input('page', 1);
+        $titleParam = $request->input('title');
+        $order = $request->input('order', 'asc');
+        $savedPosts = collect();
+
+        if ($titleParam === 'popular') {
+            $perPage = 2;
+        }
+        if ($titleParam === 'null' || $titleParam === null) {
+            $order = 'desc';
+        }
+
+        $user = User::find(auth()->user()->id);
+        $query = $user->posts()->where('status', '=', 'published')->paginate();
+        $currentPostsData = $this->mapPosts($query, $currentDateTime, $savedPosts);
+
+        return response()->json([
+            'user' => [
+                'name'=> $user->name,
+                'image'=> $user->image,
+                'postsCount' =>$query->total()
+            ],
+
+            'posts' => $currentPostsData,
+            'pagination' => [
+                'per_page' => $query->perPage(),
+                'current_page' => $query->currentPage(),
+                'last_page' => $query->lastPage(),
+            ],
+        ]);
+
+        // if ($userPosts) {
+
+        //     $uniqueCategoriesData = $userPosts->flatMap(function ($post) {
+        //         return $post->categories->map(function ($category) {
+        //             return [
+        //                 'name' => $category->name,
+        //                 'link' => $category->link,
+        //             ];
+        //         });
+        //     })->unique()->take(5)->values();
+        //     $uniqueCategoriesData = $uniqueCategoriesData->unique();
+
+
+        //     $currentPostsData = $this->mapPosts($userPosts, $currentDateTime, $savedPosts);
+        //     return response()->json([
+        //         "user" => [
+        //             "name" => $user->name,
+        //             "image" => $user->image,
+        //             "postsCount" => $userPosts->total(),
+        //         ],
+        //         'posts' => $currentPostsData,
+        //         "uniqueCategories" => $uniqueCategoriesData,
+        //         'pagination' => [
+        //             'per_page' => $userPosts->perPage(),
+        //             'current_page' => $userPosts->currentPage(),
+        //             'last_page' => $userPosts->lastPage(),
+        //         ],
+        //     ], 200);
+        // } else {
+        //     return response()->json([
+        //         'message' => 'Post not found.',
+        //     ], 404);
+        // }
+    }
 
     public function postSaved(SavedPostRequest $request)
     {
