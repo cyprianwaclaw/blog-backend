@@ -44,7 +44,7 @@ class CategoryController extends Controller
         $savedPost = $savedPosts->where('post_id', $post->id)->first();
 
         return [
-            'savedPost' => $savedPost,
+            'id' => $post->id,
             'title' => $post->name,
             'link' => $post->link,
             'description' => $post->description,
@@ -177,7 +177,6 @@ class CategoryController extends Controller
         $uniqueCategoriesData = $uniqueCategoriesData->unique();
 
         return response()->json([
-            "test",
             "category" => [
                 "name" => $category->name,
                 "link" => $category->link,

@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Post;
 use App\Models\PostDetails;
 use App\Models\User;
+use App\Models\UserDetail;
 use App\Models\Category;
 use App\Models\CategoriesPost;
 use App\Models\Comment;
@@ -25,6 +26,7 @@ class DatabaseSeeder extends Seeder
         CategoriesPost::factory()->count(2500)->create();
         Comment::factory()->count(300)->create();
         SavedPost::factory()->count(400)->create();
+        UserDetail::factory()->count(10)->create();
 
 
 

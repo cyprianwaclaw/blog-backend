@@ -4,11 +4,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\checkUserLogin;
+use Database\Factories\userDetailFactory;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\TestController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\UserDetailController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -34,6 +37,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/user/profile', [PostController::class, 'getUserProfilePage']);
         Route::get('/user/saved-posts', [UserController::class, 'getSavedPosts']);
         Route::get('/user/posts', [UserController::class, 'getPostsUserLogged']);
+
+        Route::post('/user/details', [UserDetailController::class, 'updateAbout']);
 
         Route::get('/post/{link}', [PostController::class, 'getPostByLinkLogged']);
         Route::post('/save', [PostController::class, 'postSaved']);

@@ -86,7 +86,7 @@ class PostController extends Controller
             ->get();
     }
 
-    private function getAuthors()      
+    private function getAuthors()
     {
         return User::take(5)->select('name', 'link', 'image')->get()
             ->where('status', '=', 'published')
@@ -235,7 +235,7 @@ class PostController extends Controller
         }
 
         $user = User::where('link', '=', $link)->first();
-
+        $aboutUser = $user->detail()->first();
         $query = Post::where('user_id', '=', $user->id)->where('status', '=', 'published')->with(['postDetails', 'categories', 'user']);
         $userPosts = $query->paginate($perPage, ['*'], 'page', $page);
 
@@ -258,6 +258,8 @@ class PostController extends Controller
                     "name" => $user->name,
                     "image" => $user->image,
                     "postsCount" => $userPosts->total(),
+                     "about_user" => $aboutUser ? $aboutUser->about_user : false
+                    // $aboutUser,
                 ],
                 'posts' => $currentPostsData,
                 "uniqueCategories" => $uniqueCategoriesData,
@@ -400,16 +402,17 @@ class PostController extends Controller
         }
 
         $user = User::find(auth()->user()->id);
+        $userDetails = $user->detail()->select('about_user')->first();
         $query = $user->posts()->where('status', '=', 'published')->paginate();
         $currentPostsData = $this->mapPosts($query, $currentDateTime, $savedPosts);
 
         return response()->json([
             'user' => [
-                'name'=> $user->name,
-                'image'=> $user->image,
-                'postsCount' =>$query->total()
+                'name' => $user->name,
+                'image' => $user->image,
+                'postsCount' => $query->total()
             ],
-
+            'about_user' => $userDetails->about_user,
             'posts' => $currentPostsData,
             'pagination' => [
                 'per_page' => $query->perPage(),
