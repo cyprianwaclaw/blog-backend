@@ -44,7 +44,7 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
-                'errors' =>[
+                'errors' => [
                     'notExist' => ['Podany użytkownik nie istnieje'],
 
                 ]
@@ -56,12 +56,46 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => true,
-            'user_image'=>$user->image,
+            'user_image' => $user->image,
             'message' => 'Logged in Successfully',
             'token' => $user->createToken("API TOKEN")->plainTextToken
         ], 200);
     }
+
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'oldPassword' => 'required',
+            'newPassword' => [
+                'required',
+                'min:8',
+                'regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/',
+            ],
+        ]);
+
+        $user = User::find(auth()->user()->id);
+        # Pobranie nowego i starego hasła z żądania
+        $oldPassword = $request->input('oldPassword');
+        $newPassword = $request->input('newPassword');
+        $confirmPassword = $request->input('confirmPassword');
+
+
+        # Match The Old Password
+        if (!Hash::check($oldPassword, $user->password)) {
+            return response()->json(['error' => "Błędne stare hasło"], 422);
+        }
+        if ($newPassword !== $confirmPassword) {
+            return response()->json(['error' => "Potwierdzenie nowego hasła nie zgadza się"], 422);
+        }
+        # Update the new Password
+        $user->password = Hash::make($newPassword);
+        $user->save();
+
+        return response()->json(['message' => 'Hasło zostało pomyślnie zmienione!'], 200);
+    }
 }
+
 
 // public function uploadUserPhoto(UploadUserAvatarRequest $request)
 //     {

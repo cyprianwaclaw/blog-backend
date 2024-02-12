@@ -49,11 +49,28 @@ class UserController extends Controller
         ];
     }
 
-public function getAuthenticatedUser(){
-    return response()->json([
-        'user'=>auth()->user()
-    ]);
-}
+    public function getAuthenticatedUser()
+    {
+        return response()->json([
+            'name' => auth()->user()->name,
+            'email' => auth()->user()->email,
+        ]);
+    }
+    public function updateUserData(Request $request)
+    {
+
+        $user = User::find(auth()->user()->id);
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->save();
+
+        return response()->json([
+            'message' => 'Dane użytkownika zostały zaktualizowane pomyślnie.',
+            'user' => $user
+        ]);
+
+    }
+
     public function getSavedPosts(Request $request)
     {
         // $perPage = $request->input('per_page', 3);
