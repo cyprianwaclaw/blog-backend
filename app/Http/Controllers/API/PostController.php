@@ -85,7 +85,14 @@ class PostController extends Controller
             ->take(10)
             ->get();
     }
-
+    private function getNavPosts()
+    {
+        return Post::where('status', 'published') // Wybieramy tylko opublikowane posty
+            ->orderBy('created_at', 'asc')
+            ->take(10)
+            ->select('title', 'hero_image', 'link') // Wybieramy tylko kolumny 'title', 'hero_image' i 'link'
+            ->get();
+    }
     private function getAuthors()
     {
         return User::take(5)->select('name', 'link', 'image')->get()
@@ -258,7 +265,7 @@ class PostController extends Controller
                     "name" => $user->name,
                     "image" => $user->image,
                     "postsCount" => $userPosts->total(),
-                     "about_user" => $aboutUser ? $aboutUser->about_user : false
+                    "about_user" => $aboutUser ? $aboutUser->about_user : false
                     // $aboutUser,
                 ],
                 'posts' => $currentPostsData,
@@ -277,6 +284,77 @@ class PostController extends Controller
     }
 
 
+
+    public function searchingNav(Request $request)
+    {
+        $searchQuery = $request->input('query');
+
+        $query = Post::where('status', 'published')
+            ->orderBy('created_at', 'asc');
+        if ($searchQuery) {
+            $query->where('name', 'like', '%' . $searchQuery . '%');
+            $results = $query->get();
+            return response()->json([
+                'results' => $results
+            ]);
+        }
+        $popularAuthors  = User::select('image', 'name', 'link')->take(4)->get();
+        $postsListRecommended = Post::where('status', 'published')
+            ->orderBy('created_at', 'asc')
+            ->take(5)
+            ->get();
+
+        $recommendedPostsData = $postsListRecommended->map(function ($post) {
+            return [
+                'title' => $post->name,
+                'link' => $post->link,
+                'image' => $post->{'hero-image'},
+            ];
+        });
+
+        $categories = Category::select('link', 'name')->take(10)->get();
+        return response()->json([
+            'recommended' => $recommendedPostsData,
+            'categories' => $categories,
+            'authors' => $popularAuthors
+
+        ]);
+    }
+    public function searchingNavLogged(Request $request)
+    {
+        $searchQuery = $request->input('query');
+
+        $query = Post::where('status', 'published')
+        ->orderBy('created_at', 'asc');
+        if ($searchQuery) {
+            $query->where('name', 'like', '%' . $searchQuery . '%');
+            $results = $query->get();
+            return response()->json([
+                'results' => $results
+            ]);
+        }
+        $popularAuthors  = User::select('image', 'name', 'link')->take(4)->get();
+        $postsListRecommended = Post::where('status', 'published')
+        ->orderBy('created_at', 'asc')
+            ->take(5)
+            ->get();
+
+        $recommendedPostsData = $postsListRecommended->map(function ($post) {
+            return [
+                'title' => $post->name,
+                'link' => $post->link,
+                'image' => $post->{'hero-image'},
+            ];
+        });
+
+        $categories = Category::select('link', 'name')->take(10)->get();
+        return response()->json([
+            'recommended' => $recommendedPostsData,
+            'categories' => $categories,
+            'authors' => $popularAuthors
+
+        ]);
+    }
 
     public function getPostByLink($link)
     {

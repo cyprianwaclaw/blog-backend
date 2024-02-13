@@ -44,10 +44,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/save', [PostController::class, 'postSaved']);
         Route::post('/unsave', [PostController::class, 'postUnSaved']);
         Route::post('/create/post', [PostController::class, 'createPost']);
+        Route::post('/search-nav', [PostController::class, 'searchingNavLogged']);
 
         Route::get('/user', [UserController::class, 'getAuthenticatedUser']);
         Route::post('/user/change', [UserController::class, 'updateUserData']);
-        // updatePassword
+        // searchingNav()
         Route::post( '/change-password',  [AuthController::class, 'updatePassword']
         );
     });
@@ -57,3 +58,4 @@ Route::get('/data/home', [PostController::class, 'getPostsListHome']);
 Route::get('/data/category/{link}', [CategoryController::class, 'getPostsListCategory']);
 Route::get('/data/user/{link}', [PostController::class, 'getPostsListUser']);
 Route::get('/post/{link}', [PostController::class, 'getPostByLink']);
+Route::post('/search-nav', [PostController::class, 'searchingNav']);
