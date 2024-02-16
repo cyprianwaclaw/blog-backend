@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\Auth\RegisterUser;
@@ -46,10 +47,7 @@ class AuthController extends Controller
             return response()->json([
                 'errors' => [
                     'notExist' => ['Podany użytkownik nie istnieje'],
-
                 ]
-
-
                 // 'status' => false,
             ], 401);
         }
@@ -62,17 +60,34 @@ class AuthController extends Controller
         ], 200);
     }
 
+    public function forgotPassword(ForgotPasswordRequest $request)
+    {
+
+        $email = $request->input('email');
+        $newPassword = $request->input('newPassword');
+        // $confirmPassword = $request->input('confirmPassword');
+        $user = User::where('email', $email)->first();
+
+        if ($user) {
+            $user->password = Hash::make($newPassword);
+            $user->save();
+            return response()->json(['message' => 'Twoje hasło zostało zmienione'], 200);
+
+        }
+        return response()->json(['error' => "Użytkownik o tym adresie email nie istnieje"], 422);
+    }
 
     public function updatePassword(Request $request)
     {
-        $request->validate([
-            'oldPassword' => 'required',
-            'newPassword' => [
-                'required',
-                'min:8',
-                'regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/',
-            ],
-        ]);
+        // TODO:add new validate method
+        // $request->validate([
+        //     'oldPassword' => 'required',
+        //     'newPassword' => [
+        //         'required',
+        //         'min:8',
+        //         'regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/',
+        //     ],
+        // ]);
 
         $user = User::find(auth()->user()->id);
         # Pobranie nowego i starego hasła z żądania
@@ -86,7 +101,7 @@ class AuthController extends Controller
             return response()->json(['error' => "Błędne stare hasło"], 422);
         }
         if ($newPassword !== $confirmPassword) {
-            return response()->json(['error' => "Potwierdzenie nowego hasła nie zgadza się"], 422);
+            return response()->json(['error' => "Hasła nie zgadzają się"], 422);
         }
         # Update the new Password
         $user->password = Hash::make($newPassword);

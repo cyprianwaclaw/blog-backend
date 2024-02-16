@@ -289,13 +289,18 @@ class PostController extends Controller
     {
         $searchQuery = $request->input('query');
 
-        $query = Post::where('status', 'published')
-            ->orderBy('created_at', 'asc');
         if ($searchQuery) {
-            $query->where('name', 'like', '%' . $searchQuery . '%');
-            $results = $query->get();
+
+            $queryPosts = Post::where('status', 'published')
+                ->orderBy('created_at', 'asc')->where('name', 'like', '%' . $searchQuery . '%')->select('name', 'link', 'hero-image','description')->get();
+            $queryAuthor = User::where('name', 'like', '%' . $searchQuery . '%')->select('name', 'link', 'image')->take(4)->get();
+            $queryCategories = Category::where('name', 'like', '%' . $searchQuery . '%')->select('name', 'link')->take(4)->get();
             return response()->json([
-                'results' => $results
+                'results' => true,
+                'posts' => $queryPosts,
+                'authors' => $queryAuthor,
+                'categories' => $queryCategories
+
             ]);
         }
         $popularAuthors  = User::select('image', 'name', 'link')->take(4)->get();
@@ -314,6 +319,7 @@ class PostController extends Controller
 
         $categories = Category::select('link', 'name')->take(10)->get();
         return response()->json([
+            'results' => false,
             'recommended' => $recommendedPostsData,
             'categories' => $categories,
             'authors' => $popularAuthors
@@ -325,7 +331,7 @@ class PostController extends Controller
         $searchQuery = $request->input('query');
 
         $query = Post::where('status', 'published')
-        ->orderBy('created_at', 'asc');
+            ->orderBy('created_at', 'asc');
         if ($searchQuery) {
             $query->where('name', 'like', '%' . $searchQuery . '%');
             $results = $query->get();
@@ -335,7 +341,7 @@ class PostController extends Controller
         }
         $popularAuthors  = User::select('image', 'name', 'link')->take(4)->get();
         $postsListRecommended = Post::where('status', 'published')
-        ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'asc')
             ->take(5)
             ->get();
 

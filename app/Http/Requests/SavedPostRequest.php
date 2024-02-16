@@ -41,16 +41,6 @@ class SavedPostRequest extends FormRequest
      * @param  \Illuminate\Contracts\Validation\Validator  $validator
      * @return void
      */
-    // protected function withValidator(Validator $validator)
-    // {
-    //     $validator->after(function ($validator) {
-    //         // Dodaj tutaj niestandardową logikę po standardowej walidacji.
-    //         // Na przykład:
-    //         // if (warunek) {
-    //         //     $validator->errors()->add('klucz', 'Wiadomość błędu niestandardowego');
-    //         // }
-    //     });
-    // }
 
     protected function failedValidation(Validator $validator)
     {

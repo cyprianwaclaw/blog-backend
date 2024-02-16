@@ -25,8 +25,9 @@ use App\Http\Controllers\API\UserDetailController;
 
 Route::post('/auth/register', [AuthController::class, 'registerUser']);
 Route::post('/auth/login', [AuthController::class, 'loginUser']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 
-
+// forgotPassword
 //!aby działało auth() lub $request->user() musi byc w middlewarze
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('logged')->group(function () {
@@ -44,7 +45,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/save', [PostController::class, 'postSaved']);
         Route::post('/unsave', [PostController::class, 'postUnSaved']);
         Route::post('/create/post', [PostController::class, 'createPost']);
-        Route::post('/search-nav', [PostController::class, 'searchingNavLogged']);
+        Route::post('/search-nav', [PostController::class, 'searchingNav']);
+        // Route::post('/search-nav', [PostController::class, 'searchingNavLogged']);
 
         Route::get('/user', [UserController::class, 'getAuthenticatedUser']);
         Route::post('/user/change', [UserController::class, 'updateUserData']);
