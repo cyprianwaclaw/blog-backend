@@ -24,10 +24,10 @@ class RegisterUser extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:40',
             'email' => 'required|email|unique:users,email',
-            // 'password' => 'required|string|min:6',
             'password' => 'required|string|min:6|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{6,}$/',
+            'confirmPassword' => 'required|string|same:password',
         ];
     }
 
@@ -41,7 +41,7 @@ class RegisterUser extends FormRequest
         return [
             'name.required' => 'Pole nazwy jest wymagane.',
             'name.string' => 'Nazwa musi być ciągiem znaków.',
-            'name.max' => 'Nazwa nie może przekraczać 255 znaków.',
+            'name.max' => 'Nazwa nie może przekraczać 40 znaków.',
 
             'email.required' => 'Pole adresu e-mail jest wymagane.',
             'email.email' => 'Podany adres e-mail nie jest prawidłowy.',
@@ -51,6 +51,7 @@ class RegisterUser extends FormRequest
             'password.string' => 'Hasło musi być ciągiem znaków.',
             'password.min' => 'Hasło musi mieć co najmniej 6 znaków.',
             'password.regex' => 'Hasło musi zawierać co najmniej jedną małą literę, jedną wielką literę, jedną cyfrę oraz jeden znak specjalny.',
+            'confirmPassword.same' => 'Hasła muszą być identyczne',
         ];
     }
 

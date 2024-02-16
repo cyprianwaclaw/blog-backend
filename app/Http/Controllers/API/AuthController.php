@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\Auth\RegisterUser;
 use App\Http\Requests\Auth\LoginUser;
@@ -12,6 +13,17 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
+    private function modifyString($inputString)
+    {
+        $cleanedString = str_replace(
+            ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż', 'Ą', 'Ć', 'Ę', 'Ł', 'Ń', 'Ó', 'Ś', 'Ź', 'Ż'],
+            ['a', 'c', 'e', 'l', 'n', 'o', 's', 'z', 'z', 'A', 'C', 'E', 'L', 'N', 'O', 'S', 'Z', 'Z'],
+            $inputString
+        );
+        $cleanedString = str_replace(' ', '-', $cleanedString);
+        $cleanedString .= '-' . Str::random(8);
+        return $cleanedString;
+    }
 
     /**
      * Create User
@@ -20,15 +32,18 @@ class AuthController extends Controller
      */
     public function registerUser(RegisterUser $request)
     {
+        $link = Str::slug($this->modifyString($request->name));
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+            'link' => $link,
 
+            'password' => Hash::make($request->password)
+        ]);
+        $user->detail()->create(['about_user' => null]);
         return response()->json([
-            'status' => true,
-            'message' => 'User created successfully',
+            'success' => true,
+            'message' => 'Utworzono nowego użytkownika',
             'token' => $user->createToken("API TOKEN")->plainTextToken
         ], 201);
     }
@@ -65,14 +80,12 @@ class AuthController extends Controller
 
         $email = $request->input('email');
         $newPassword = $request->input('newPassword');
-        // $confirmPassword = $request->input('confirmPassword');
         $user = User::where('email', $email)->first();
 
         if ($user) {
             $user->password = Hash::make($newPassword);
             $user->save();
             return response()->json(['message' => 'Twoje hasło zostało zmienione'], 200);
-
         }
         return response()->json(['error' => "Użytkownik o tym adresie email nie istnieje"], 422);
     }
