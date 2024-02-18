@@ -9,6 +9,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PostController;
 use App\Http\Controllers\API\TestController;
 use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\UserDetailController;
 
@@ -51,8 +52,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/user', [UserController::class, 'getAuthenticatedUser']);
         Route::post('/user/change', [UserController::class, 'updateUserData']);
         // searchingNav()
-        Route::post( '/change-password',  [AuthController::class, 'updatePassword']
-        );
+        Route::post('/change-password',  [AuthController::class, 'updatePassword']);
+
+
+        // createNewCommen
+        // deleteComment
+        Route::post( '/new-comment', [CommentController::class, 'createNewComment'] );
+        Route::post('/delete-comment', [CommentController::class, 'deleteComment']);
     });
 });
 

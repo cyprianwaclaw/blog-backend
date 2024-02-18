@@ -30,9 +30,6 @@ class CommentFactory extends Factory
                 return User::inRandomOrder()->first()->id;
             },
             'text' => $this->faker->paragraph,
-            'title' => function () {
-                return Str::random(12);
-            },
             'relaction'=> Comment::COMMENT_TYPE_ENUM[array_rand(Comment::COMMENT_TYPE_ENUM)],
             'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'updated_at' => $this->faker->dateTimeBetween('-1 year', 'now'),

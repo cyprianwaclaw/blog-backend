@@ -27,7 +27,6 @@ class PostStoreRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:258',
-            // 'user_id' => 'required|exists:App\Models\Quiz,id',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'description' => 'required|string'
         ];

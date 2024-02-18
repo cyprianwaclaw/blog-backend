@@ -292,7 +292,7 @@ class PostController extends Controller
         if ($searchQuery) {
 
             $queryPosts = Post::where('status', 'published')
-                ->orderBy('created_at', 'asc')->where('name', 'like', '%' . $searchQuery . '%')->select('name', 'link', 'hero-image','description')->get();
+                ->orderBy('created_at', 'asc')->where('name', 'like', '%' . $searchQuery . '%')->select('name', 'link', 'hero-image', 'description')->get();
             $queryAuthor = User::where('name', 'like', '%' . $searchQuery . '%')->select('name', 'link', 'image')->take(4)->get();
             $queryCategories = Category::where('name', 'like', '%' . $searchQuery . '%')->select('name', 'link')->take(4)->get();
             return response()->json([
@@ -424,7 +424,8 @@ class PostController extends Controller
             ], 404);
         }
 
-        $comments = $currentPost->comments()->with('user')->get();
+        $comments = $currentPost->comments()->with('user')->orderBy('created_at', 'asc')->get();
+
         $publishedAt = Carbon::parse($currentPost->created_at);
         $dateDifference = $publishedAt->diffInDays($currentDateTime);
         $savedPosts = $this->getSavedPosts();
@@ -457,14 +458,24 @@ class PostController extends Controller
                 return $category->only(['name', 'link']);
             }),
             'comments' => $comments->map(function ($comment) {
+                $publishedAtComment = Carbon::parse($comment->created_at);
+                $dateDifferenceComment = $publishedAtComment->diffInDays(now());
+                $user = auth()->user();
+
                 return [
-                    'title' => $comment->title,
+                    'id' => $comment->id,
                     'relaction' => $comment->relaction,
                     'text' => $comment->text,
                     'user' => $comment->user->only(['name', 'link', 'image']),
-                    'created_at' => $comment->created_at,
+                    'date' => $this->formatDate($publishedAtComment, $dateDifferenceComment),
+                    'toEdit' => $user->id == $comment->user->id ? true : false,
                 ];
             }),
+            'currentUser' =>  [
+                'name' => auth()->user()->name,
+                'link' => auth()->user()->link,
+                'image' => auth()->user()->image,
+            ],
             'otherUserPosts' => $otherUserPostsMapping,
         ], 200);
     }
