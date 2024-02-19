@@ -285,7 +285,7 @@ class PostController extends Controller
 
 
 
-    public function searchingNav(Request $request)
+    public function searchingNav1(Request $request)
     {
         $searchQuery = $request->input('query');
 
@@ -326,6 +326,64 @@ class PostController extends Controller
 
         ]);
     }
+    public function searchingNav(Request $request)
+    {
+        $searchQuery = $request->input('query');
+
+        if (!$searchQuery) {
+            // Jeśli nie podano zapytania, zwróć domyślne wyniki
+            $popularAuthors = User::select('image', 'name', 'link')->take(4)->get();
+            $postsListRecommended = Post::where('status', 'published')
+            ->orderBy('created_at', 'asc')
+                ->take(5)
+                ->get();
+
+            $recommendedPostsData = $postsListRecommended->map(function ($post) {
+                return [
+                    'title' => $post->name,
+                    'link' => $post->link,
+                    'image' => $post->{'hero-image'},
+                ];
+            });
+
+            $categories = Category::select('link', 'name')->take(10)->get();
+
+            return response()->json([
+                'results' => false,
+                'recommended' => $recommendedPostsData,
+                'categories' => $categories,
+                'authors' => $popularAuthors
+            ]);
+        }
+
+        // Szukaj pasujących wyników dla podanego zapytania
+        $queryPosts = Post::where('status', 'published')
+        ->orderBy('created_at', 'asc')
+            ->where(function ($query) use ($searchQuery) {
+                $query->where('name', 'like', '%' . $searchQuery . '%')
+                    ->orWhere('name', 'like', '%' . str_replace(' ', '%', $searchQuery) . '%');
+            })
+            ->select('name', 'link', 'hero-image', 'description')
+            ->get();
+
+        $queryAuthor = User::where('name', 'like', '%' . $searchQuery . '%')
+            ->select('name', 'link', 'image')
+            ->take(4)
+            ->get();
+
+        $queryCategories = Category::where('name', 'like', '%' . $searchQuery . '%')
+            ->select('name', 'link')
+            ->take(4)
+            ->get();
+
+        return response()->json([
+            'results' => true,
+            'posts' => $queryPosts,
+            'authors' => $queryAuthor,
+            'categories' => $queryCategories
+        ]);
+    }
+
     public function searchingNavLogged(Request $request)
     {
         $searchQuery = $request->input('query');

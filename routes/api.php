@@ -59,6 +59,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // deleteComment
         Route::post( '/new-comment', [CommentController::class, 'createNewComment'] );
         Route::post('/delete-comment', [CommentController::class, 'deleteComment']);
+        Route::post('/update-comment', [CommentController::class, 'updateComment']);
+
     });
 });
 
