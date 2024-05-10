@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
             // $table->foreignId('categories_ids')->constrained('categories')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade'); // zmiana typu kolumny na foreignUuid
             // $table->foreignId('post_detail_id')->constrained('post_details')->onDelete('cascade');
             $table->string('name');
             $table->enum('status', ['published', 'draft']);

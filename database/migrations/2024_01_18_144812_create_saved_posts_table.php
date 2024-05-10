@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('saved_posts', function (Blueprint $table) {
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade'); // zmiana typu kolumny na foreignUuid
             $table->foreignId('post_id')->constrained('posts')->onDelete('cascade');
             $table->timestamps();
         });

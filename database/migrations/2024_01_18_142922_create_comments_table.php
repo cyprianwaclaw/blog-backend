@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
             $table->text('text');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade'); // zmiana typu kolumny na foreignUuid
             $table->foreignId('post_id')->constrained('posts')->onDelete('cascade');
             $table->enum('relaction', ['null', 'like', 'heart', 'haha'])->nullable();
             $table->timestamps();

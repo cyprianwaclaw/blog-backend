@@ -29,6 +29,7 @@ class PostController extends Controller
      * @param  int  $dateDifference
      * @return string
      */
+
     private function formatDate($publishedAt, $dateDifference)
     {
         if ($dateDifference === 0) {
@@ -56,6 +57,7 @@ class PostController extends Controller
             'id' => $post->id,
             'title' => $post->name,
             'link' => $post->link,
+            'read_time' => $post->read_time,
             'description' => $post->description,
             'image' => $post->{'hero-image'},
             'saved' => $savedPost ? true : false,
@@ -67,10 +69,11 @@ class PostController extends Controller
             'date' => $this->formatDate($publishedAt, $dateDifference),
         ];
     }
+
     private function getPostsForHero()
     {
-        return Post::with(['user', 'comments'])
-            ->where('status', '=', 'published')
+        // return Post::with(['user'])
+        return Post::where('status', '=', 'published')
             ->orderBy('created_at', 'asc')
             ->take(10)
             ->get();
@@ -85,6 +88,7 @@ class PostController extends Controller
             ->take(10)
             ->get();
     }
+
     private function getNavPosts()
     {
         return Post::where('status', 'published') // Wybieramy tylko opublikowane posty
@@ -120,26 +124,86 @@ class PostController extends Controller
             return $this->mapPostData($post, $currentDateTime, $savedPosts);
         });
     }
-
-    public function getPostsListHome()
+    // public function test(){
+    //     $posts = Post::all();
+    //     return response()->json($posts);
+    // }
+    public function test(Request $request)
     {
-        $currentDateTime = now();
-        $postsListHero = $this->getPostsForHero();
-        $postsListRecommended = $this->getRecommendedPosts();
-        $authors = $this->getAuthors();
-        $categories = $this->getCategories();
-        $savedPosts = collect(); // Empty collection for not logged in users
 
-        $postsListRecommendedMap = $this->mapPosts($postsListRecommended, $currentDateTime, $savedPosts);
-        $postsListHeroMap = $this->mapPosts($postsListHero, $currentDateTime, $savedPosts);
+        $filteredArray = $request->input();
+        // if($filteredArray){
+        //     $posts = Post::filter(function ($item) use($filteredArray){
+        // return $item
+        //     })->get();
+        // }
+        $posts = Post::withCount('comments')
+            ->having('comments_count', 5)
+            ->get();
+
+        return response()->json([$posts]);
+    }
+
+
+    public function getPostsListHome(Request $request)
+    {
+        $dataParam = $request->input('data');
+        $currentDateTime = now();
+        // $postsListHero = Post::take(3)->get();
+        $postsListHero = Post::all();
+
+        $categorySection = Post::all();
+
+        $filters = [
+            'status' => 'draft',
+            'read_time'=> 13,
+            // Tutaj możesz dodać inne filtry, jeśli są potrzebne
+        ];
+        if ($dataParam) {
+            // $test = Post::categoryByName($dataParam)->with('user');
+            // $test = Post::with('user')
+            // ->published() // Wywołanie metody scopePublished()
+            //     ->categoryByName($dataParam);
+            $test = Post::categoryByName($dataParam, $filters);
+            // $test = Post::categoryByName($dataParam);
+            // $test = Post::with('user')->published()->get();
+
+            // $test = Post::categoryByName($dataParam);
+
+        } else{
+                return response()->json(['message'=>'Category name is required']);
+        }
+
+        // $postsListHero = Post::with('user')->take(3)->get();
+
+        // $postsListHeroList = $this->getPostsForHero()->take(3);
+
+        // $postsListHero = $this->getPostsForHero();
+
+        // $postsListRecommended = $this->getRecommendedPosts();
+        // $authors = $this->getAuthors();
+        // $categories = $this->getCategories();
+        // $savedPosts = collect(); // Empty collection for not logged in users
+
+        // $postsListRecommendedMap = $this->mapPosts($postsListRecommended, $currentDateTime, $savedPosts);
+
+        // $postsListHeroMap = $this->mapPosts($postsListHero, $currentDateTime, $savedPosts);
+        // $postsListHeroListMap = $this->mapPosts($postsListHeroList, $currentDateTime, $savedPosts);
 
         return response()->json([
-            'savedPosts' => $savedPosts,
+            // 'savedPosts' => "test",
             // 'user' => auth()->user(),
-            'hero' => $postsListHeroMap,
-            'authors' => $authors,
-            'categories' => $categories,
-            'recommended' => $postsListRecommendedMap,
+            $test,
+            // $dataParam,
+            // 'hero' => $postsListHero,
+            // 'hero' => [
+            //     'hero' => $postsListHeroMap,
+            //     'list' => $postsListHeroListMap
+            // ],
+
+            // 'authors' => $authors,
+            // 'categories' => $categorySection ,
+            // 'recommended' => $postsListRecommendedMap,
         ], 200);
     }
 
@@ -334,7 +398,7 @@ class PostController extends Controller
             // Jeśli nie podano zapytania, zwróć domyślne wyniki
             $popularAuthors = User::select('image', 'name', 'link')->take(4)->get();
             $postsListRecommended = Post::where('status', 'published')
-            ->orderBy('created_at', 'asc')
+                ->orderBy('created_at', 'asc')
                 ->take(5)
                 ->get();
 
@@ -358,7 +422,7 @@ class PostController extends Controller
 
         // Szukaj pasujących wyników dla podanego zapytania
         $queryPosts = Post::where('status', 'published')
-        ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'asc')
             ->where(function ($query) use ($searchQuery) {
                 $query->where('name', 'like', '%' . $searchQuery . '%')
                     ->orWhere('name', 'like', '%' . str_replace(' ', '%', $searchQuery) . '%');
@@ -538,41 +602,46 @@ class PostController extends Controller
         ], 200);
     }
 
-    public function getUserProfilePage(Request $request)
+    // public function getUserProfilePage(Request $request)
+    public function getUserProfilePage()
     {
-        $currentDateTime = now();
-        $perPage = $request->input('per_page', 3);
-        $page = $request->input('page', 1);
-        $titleParam = $request->input('title');
-        $order = $request->input('order', 'asc');
-        $savedPosts = collect();
-
-        if ($titleParam === 'popular') {
-            $perPage = 2;
-        }
-        if ($titleParam === 'null' || $titleParam === null) {
-            $order = 'desc';
-        }
-
-        $user = User::find(auth()->user()->id);
-        $userDetails = $user->detail()->select('about_user')->first();
-        $query = $user->posts()->where('status', '=', 'published')->paginate();
-        $currentPostsData = $this->mapPosts($query, $currentDateTime, $savedPosts);
 
         return response()->json([
-            'user' => [
-                'name' => $user->name,
-                'image' => $user->image,
-                'postsCount' => $query->total()
-            ],
-            'about_user' => $userDetails->about_user,
-            'posts' => $currentPostsData,
-            'pagination' => [
-                'per_page' => $query->perPage(),
-                'current_page' => $query->currentPage(),
-                'last_page' => $query->lastPage(),
-            ],
+            'user'
         ]);
+        // $currentDateTime = now();
+        // $perPage = $request->input('per_page', 3);
+        // $page = $request->input('page', 1);
+        // $titleParam = $request->input('title');
+        // $order = $request->input('order', 'asc');
+        // $savedPosts = collect();
+
+        // if ($titleParam === 'popular') {
+        //     $perPage = 2;
+        // }
+        // if ($titleParam === 'null' || $titleParam === null) {
+        //     $order = 'desc';
+        // }
+
+        // $user = User::find(auth()->user()->id);
+        // $userDetails = $user->detail()->select('about_user')->first();
+        // $query = $user->posts()->where('status', '=', 'published')->paginate();
+        // $currentPostsData = $this->mapPosts($query, $currentDateTime, $savedPosts);
+
+        // return response()->json([
+        //     'user' => [
+        //         'name' => $user->name,
+        //         'image' => $user->image,
+        //         'postsCount' => $query->total()
+        //     ],
+        //     'about_user' => $userDetails->about_user,
+        //     'posts' => $currentPostsData,
+        //     'pagination' => [
+        //         'per_page' => $query->perPage(),
+        //         'current_page' => $query->currentPage(),
+        //         'last_page' => $query->lastPage(),
+        //     ],
+        // ]);
 
         // if ($userPosts) {
 

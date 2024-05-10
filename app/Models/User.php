@@ -3,19 +3,24 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Post;
+use App\Models\SavedPost;
+use App\Models\UserDetail;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasUuids, Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array
      */
     protected $fillable = [
         'name',
@@ -44,6 +49,21 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    // Metoda wykonująca się automatycznie po utworzeniu nowego użytkownika
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            // Wykonaj operacje po utworzeniu nowego użytkownika
+            DB::table('categories')->insert([
+                'name' => $user->email, // Użyj adresu email jako nazwy kategorii
+                'link' => $user->email, // Użyj adresu email jako nazwy kategorii
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+    }
+
 
     public function savedPosts()
     {

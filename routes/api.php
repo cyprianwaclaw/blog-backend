@@ -65,6 +65,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::get('/data/home', [PostController::class, 'getPostsListHome']);
+// Route::get('/data/home', [PostController::class, 'test']);
+
 Route::get('/data/category/{link}', [CategoryController::class, 'getPostsListCategory']);
 Route::get('/data/user/{link}', [PostController::class, 'getPostsListUser']);
 Route::get('/post/{link}', [PostController::class, 'getPostByLink']);

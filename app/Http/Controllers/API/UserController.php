@@ -54,6 +54,7 @@ class UserController extends Controller
         return response()->json([
             'name' => auth()->user()->name,
             'email' => auth()->user()->email,
+               'link' => auth()->user()->link,
         ]);
     }
     public function updateUserData(Request $request)
@@ -62,6 +63,7 @@ class UserController extends Controller
         $user = User::find(auth()->user()->id);
         $user->name = $request->input('name');
         $user->email = $request->input('email');
+        $user->link = $request->input('link');
         $user->save();
 
         return response()->json([
